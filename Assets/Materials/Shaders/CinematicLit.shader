@@ -3,6 +3,12 @@ Shader "Unlit/CinematicLit"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        [HDR]
+        _AmbientColor("Ambient Color", Color) = (0.4,0.4,0.4,1)
+        [HDR]
+        _LeftHighlightColor ("Left Highlight Color", Color) = (1,0,.4,1)
+        [HDR]
+        _RightHighlightColor ("Right Highlight Color", Color) = (.1,1,1,1)
     }
     SubShader
     {
@@ -14,8 +20,6 @@ Shader "Unlit/CinematicLit"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            // make fog work
-            #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
 
@@ -35,6 +39,8 @@ Shader "Unlit/CinematicLit"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            float4 _AmbientColor;
+            float4 _LeftHighlightColor, _RightHighlightColor;
 
             v2f vert (appdata v)
             {
@@ -47,11 +53,18 @@ Shader "Unlit/CinematicLit"
 
             fixed4 frag (v2f i) : SV_Target
             {
+                float4 col = tex2D(_MainTex, i.uv);
+                
                 float3 normal = normalize(i.worldNormal);
                 float leftLightIntensity = dot(float3(-1, 1, 0), normal);
+                leftLightIntensity = saturate(leftLightIntensity);
                 float rightLightIntensity = dot(float3(1, 1, 0), normal);
-                fixed4 col = tex2D(_MainTex, i.uv);
-                return col * float4(0, 0, 1, 1) * leftLightIntensity;
+                rightLightIntensity = saturate(rightLightIntensity);
+
+                float4 leftLight = _LeftHighlightColor * leftLightIntensity;
+                float4 rightLight = _RightHighlightColor * rightLightIntensity;
+                
+                return col * (leftLight + rightLight + _AmbientColor);
             }
             ENDCG
         }

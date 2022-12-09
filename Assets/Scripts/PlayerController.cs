@@ -56,6 +56,7 @@ public class PlayerController : MonoBehaviour
             targetPosition = transform.position + direction * cellSize;
             fsm.PopState();
             fsm.PushState(moving);
+            EventSystem.Invoke(EventTypes.endTurn);
         }
     }
 

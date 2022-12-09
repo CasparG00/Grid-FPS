@@ -8,6 +8,7 @@ public class FSM
     
     public void Update (GameObject gameObject) 
     {
+        if (states.Count == 0) return;
         states.Peek()?.Invoke(this, gameObject);
     }
 

@@ -3,12 +3,10 @@ Shader "Unlit/CinematicLit"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
-        [HDR]
         _AmbientColor("Ambient Color", Color) = (0.4,0.4,0.4,1)
-        [HDR]
         _LeftHighlightColor ("Left Highlight Color", Color) = (1,0,.4,1)
-        [HDR]
         _RightHighlightColor ("Right Highlight Color", Color) = (.1,1,1,1)
+        _FogDistanceMultiplier ("Fog Distance Multiplier", float) = 1
     }
     SubShader
     {
@@ -34,6 +32,7 @@ Shader "Unlit/CinematicLit"
             {
                 float2 uv : TEXCOORD0;
                 float4 vertex : SV_POSITION;
+                float3 worldPos : TEXCOORD1;
                 float3 worldNormal : NORMAL;
             };
 
@@ -42,12 +41,15 @@ Shader "Unlit/CinematicLit"
             float4 _AmbientColor;
             float4 _LeftHighlightColor, _RightHighlightColor;
 
+            float _FogDistanceMultiplier;
+
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 o.worldNormal = UnityObjectToWorldNormal(v.normal);
+                o.worldPos = mul (unity_ObjectToWorld, v.vertex);
                 return o;
             }
 
@@ -63,6 +65,8 @@ Shader "Unlit/CinematicLit"
 
                 float4 leftLight = _LeftHighlightColor * leftLightIntensity;
                 float4 rightLight = _RightHighlightColor * rightLightIntensity;
+
+                float camDist = distance(i.worldPos, _WorldSpaceCameraPos) * _FogDistanceMultiplier;
                 
                 return col * (leftLight + rightLight + _AmbientColor);
             }
